@@ -5,6 +5,7 @@ import torch
 from PIL import Image 
 
 import os
+import re
 from pathlib import Path
 
 ImageSuffices = [
@@ -20,11 +21,22 @@ class WarpedDataset(BaseDataset):
     def __init__(self, opt):
         super().__init__(opt)
         self.opt = opt
+        self.re_strip_end = re.compile( r"(.*)_\d+(\.(?:png|jpg|jpeg))$" )
 
         self.paths = dict()
-        for subcat in ('A', 'B', 'Warped'):
+        for subcat in ('A', 'Warped'):
             basedir = Path(opt.dataroot, opt.phase + subcat)
             self.paths[subcat] = sorted([p for p in basedir.iterdir() if p.suffix.casefold() in ImageSuffices], key=lambda p: p.name)
+
+        # The structure of the dataset requires spetial treatment for the 'B' folder
+        basedir = Path(opt.dataroot, opt.phase + 'B')
+        self.paths['B'] = [basedir / self.get_B_fname(A_path.name) for A_path in self.paths['A']]
+
+    def get_B_fname(self, fname):
+        m = self.re_strip_end.match(fname)
+        if not m:
+            return fname
+        return ''.join(m.group(1,2))
 
     def __getitem__(self, index):
         ans = dict()
