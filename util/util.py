@@ -19,8 +19,14 @@ def tensor2im(input_image, imtype=np.uint8):
         else:
             return input_image
         image_numpy = image_tensor[0].cpu().float().numpy()  # convert it into a numpy array
-        if image_numpy.shape[0] == 1:  # grayscale to RGB
+
+        C, H, W = image_numpy.shape
+        if C == 1:  # grayscale to RGB
             image_numpy = np.tile(image_numpy, (3, 1, 1))
+        elif C == 2: # Turn 2-channel output into 3-channel
+            dummy_channel = np.ones( (1, H, W) )
+            image_numpy = np.concatenate( (image_numpy, dummy_channel), axis=0 )
+
         image_numpy = (np.transpose(image_numpy, (1, 2, 0)) + 1) / 2.0 * 255.0  # post-processing: tranpose and scaling
     else:  # if it is a numpy array, do nothing
         image_numpy = input_image

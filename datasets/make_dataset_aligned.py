@@ -21,15 +21,19 @@ def align_images(a_file_paths, b_file_paths, target_path):
     if not os.path.exists(target_path):
         os.makedirs(target_path)
 
-    for i in range(len(a_file_paths)):
-        img_a = Image.open(a_file_paths[i])
-        img_b = Image.open(b_file_paths[i])
-        assert(img_a.size == img_b.size)
+    for a_path, b_path in zip(a_file_paths, b_file_paths):
+        img_a = Image.open(a_path)
+        img_b = Image.open(b_path)
+
+        if img_a.size != img_b.size:
+            img_b = img_b.resize( img_a.size, Image.BICUBIC )
 
         aligned_image = Image.new("RGB", (img_a.size[0] * 2, img_a.size[1]))
         aligned_image.paste(img_a, (0, 0))
         aligned_image.paste(img_b, (img_a.size[0], 0))
-        aligned_image.save(os.path.join(target_path, '{:04d}.jpg'.format(i)))
+
+        output_fname = os.path.basename(a_path)
+        aligned_image.save(os.path.join(target_path, output_fname))
 
 
 if __name__ == '__main__':
@@ -60,4 +64,4 @@ if __name__ == '__main__':
     train_path = os.path.join(dataset_folder, 'train')
 
     align_images(test_a_file_paths, test_b_file_paths, test_path)
-    align_images(train_a_file_paths, train_b_file_paths, train_path)
+#    align_images(train_a_file_paths, train_b_file_paths, train_path)
